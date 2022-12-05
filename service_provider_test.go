@@ -923,6 +923,25 @@ func TestSPCanParseResponse(t *testing.T) {
 	}, assertion.AttributeStatements[0].Attributes))
 }
 
+func TestSPCanProcessEmptyResponse(t *testing.T) {
+	test := NewServiceProviderTest(t)
+	s := ServiceProvider{
+		Key:         test.Key,
+		Certificate: test.Certificate,
+		MetadataURL: mustParseURL("https://15661444.ngrok.io/saml2/metadata"),
+		AcsURL:      mustParseURL("https://15661444.ngrok.io/saml2/acs"),
+		IDPMetadata: &EntityDescriptor{},
+	}
+	err := xml.Unmarshal(test.IDPMetadata, &s.IDPMetadata)
+	assert.Check(t, err)
+
+	req := http.Request{PostForm: url.Values{}}
+	req.PostForm.Set("SAMLResponse", base64.StdEncoding.EncodeToString([]byte{}))
+	assertion, err := s.ParseResponse(&req, []string{"id-9e61753d64e928af5a7a341a97f420c9"})
+	assert.Check(t, assertion == nil)
+	assert.Error(t, err.(*InvalidResponseError).PrivateErr, "empty xml")
+}
+
 func (test *ServiceProviderTest) replaceDestination(newDestination string) {
 	newStr := ""
 	if newDestination != "" {
