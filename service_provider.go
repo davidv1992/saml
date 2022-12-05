@@ -803,6 +803,11 @@ func (sp *ServiceProvider) ParseXMLResponse(decodedResponseXML []byte, possibleR
 		return nil, retErr
 	}
 
+	if doc.Root() == nil {
+		retErr.PrivateErr = fmt.Errorf("empty xml")
+		return nil, retErr
+	}
+
 	assertion, err := sp.parseResponse(doc.Root(), possibleRequestIDs, now, signatureRequired)
 	if err != nil {
 		retErr.PrivateErr = err
